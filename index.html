@@ -1,0 +1,406 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SQL Quest - Your Adventure in Data</title>
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.8.0/sql-wasm.js"></script>
+
+    <style>
+        :root {
+            --bg-color: #0A192F;
+            --container-bg: #112240;
+            --text-color: #ccd6f6;
+            --light-text: #8892b0;
+            --accent-color: #64FFDA; /* Neon Cyan */
+            --accent-light: #a7ffeb;
+            --error-color: #FF79C6; /* Magenta */
+            --hint-color: #FFCB6B; /* Gold */
+            --code-bg: #01122A;
+            --font-sans: 'Poppins', sans-serif;
+            --font-mono: 'Fira Code', monospace;
+            --border-radius: 8px;
+        }
+
+        @import url('https://fonts.googleapis.com/css2?family=Fira+Code&family=Poppins:wght@400;700&display=swap');
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: var(--font-sans);
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            min-height: 100vh;
+            padding: 2rem;
+        }
+
+        .app-container {
+            width: 100%;
+            max-width: 800px;
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+
+        header { text-align: center; }
+        header h1 { color: var(--accent-color); font-size: 2.5rem; }
+        header p { color: var(--light-text); font-size: 1.1rem; }
+
+        .player-stats {
+            background-color: var(--container-bg);
+            border-radius: var(--border-radius);
+            padding: 1rem 1.5rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border: 1px solid #233554;
+        }
+        .level-display { font-size: 1.2rem; font-weight: 700; }
+        .xp-bar-container { flex-grow: 1; margin: 0 1.5rem; background-color: var(--bg-color); border-radius: 1rem; height: 1.2rem; overflow: hidden; }
+        .xp-bar-fill { height: 100%; width: 0%; background: linear-gradient(90deg, #FF79C6 0%, #64FFDA 100%); transition: width 0.5s ease-out; }
+        .xp-text { font-family: var(--font-mono); font-size: 0.9rem; }
+        
+        button {
+            padding: 0.75rem;
+            font-family: var(--font-sans);
+            font-size: 1.1rem;
+            font-weight: 700;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        
+        #spellbook-btn { font-size: 1rem; padding: 0.5rem 1rem; background-color: transparent; color: var(--accent-color); border: 2px solid var(--accent-color); }
+        #spellbook-btn:hover:not(:disabled) { background-color: var(--container-bg); }
+
+        .panel {
+            background-color: var(--container-bg);
+            border-radius: var(--border-radius);
+            padding: 1.5rem;
+            border: 1px solid #233554;
+        }
+        .panel h2 { color: var(--accent-color); margin-bottom: 0.75rem; padding-bottom: 0.5rem; border-bottom: 1px solid #233554; }
+        
+        .knowledge-panel p { margin-bottom: 1rem; line-height: 1.6; }
+        .knowledge-panel code { font-family: var(--font-mono); background-color: var(--code-bg); color: var(--accent-light); padding: 0.2rem 0.4rem; border-radius: 4px; }
+        .knowledge-panel pre { background-color: var(--code-bg); border: 1px solid #233554; padding: 1rem; border-radius: 4px; overflow-x: auto; margin-bottom: 1rem; }
+        .knowledge-panel pre code { background: none; padding: 0; }
+        
+        .button-group { display: flex; gap: 1rem; margin-top: 1rem; }
+        .button-group button { flex-grow: 1; }
+        
+        #start-practice-btn { color: var(--bg-color); background-color: var(--accent-color); margin-top: 1rem; width: 100%; }
+        #next-lesson-btn { color: var(--bg-color); background-color: var(--hint-color); width: 100%; margin-top: 1rem; }
+        #run-button { color: var(--bg-color); background-color: var(--accent-color); }
+        #hint-button { color: var(--accent-color); background-color: transparent; border: 2px solid var(--accent-color); }
+
+        button:disabled { background-color: #555 !important; color: #999 !important; border-color: #555 !important; cursor: not-allowed; }
+        textarea:disabled { background-color: #333; cursor: not-allowed; }
+        #start-practice-btn:hover:not(:disabled) { background-color: var(--accent-light); }
+        #run-button:hover:not(:disabled) { background-color: var(--accent-light); }
+        #hint-button:hover:not(:disabled) { background-color: var(--container-bg); }
+        #next-lesson-btn:hover:not(:disabled) { background-color: #ffd98a; }
+
+        #query-editor { width: 100%; height: 150px; background-color: #000; color: #fff; border: 1px solid #333; border-radius: 4px; padding: 1rem; font-family: var(--font-mono); font-size: 1rem; resize: vertical; }
+        #query-editor:focus { outline: 2px solid var(--accent-color); }
+
+        #output { margin-top: 1rem; font-family: var(--font-mono); overflow-x: auto; }
+        .feedback-message { padding: 1rem; margin-bottom: 1rem; border-radius: 4px; text-align: center; font-weight: 700; }
+        .success-message { background-color: rgba(100, 255, 218, 0.1); color: var(--accent-color); border: 1px solid var(--accent-color); }
+        .error-message { background-color: rgba(255, 121, 198, 0.1); color: var(--error-color); border: 1px solid var(--error-color); }
+        .hint-message { background-color: rgba(255, 203, 107, 0.1); color: var(--hint-color); border: 1px solid var(--hint-color); }
+
+        .results-table { width: 100%; border-collapse: collapse; margin-top: 1rem; }
+        .results-table th, .results-table td { border: 1px solid #233554; padding: 0.5rem; text-align: left; }
+        .results-table th { background-color: var(--bg-color); color: var(--accent-color); }
+        
+        #final-message { text-align: center; display: none; }
+        
+        /* Spellbook Modal Styles */
+        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(10, 25, 47, 0.85); display: flex; justify-content: center; align-items: center; z-index: 1000; display: none; }
+        .modal-content { background-color: var(--container-bg); padding: 2rem; border-radius: var(--border-radius); width: 90%; max-width: 700px; max-height: 80vh; overflow-y: auto; position: relative; border: 1px solid var(--accent-color); }
+        .modal-close { position: absolute; top: 1rem; right: 1.5rem; font-size: 2rem; color: var(--text-color); cursor: pointer; border: none; background: none; }
+        .spellbook-entry { margin-bottom: 1.5rem; border-left: 3px solid var(--hint-color); padding-left: 1rem; }
+        .spellbook-entry h3 { color: var(--hint-color); }
+        .spellbook-entry p { color: var(--light-text); margin: 0.5rem 0; }
+        .spellbook-entry pre { margin-top: 0.5rem; }
+    </style>
+</head>
+<body>
+
+    <main class="app-container">
+        <header>
+            <h1>SQL Quest 🔮</h1>
+            <p>Level Up Your Data Skills!</p>
+        </header>
+
+        <section class="player-stats">
+            <button id="spellbook-btn" disabled>📖 Spellbook</button>
+            <div class="xp-bar-container">
+                <div id="xp-bar-fill" class="xp-bar-fill"></div>
+            </div>
+            <div id="level-display" class="level-display">Level 1</div>
+        </section>
+
+        <!-- Panels will be controlled by JS -->
+        <section id="knowledge-panel" class="panel"></section>
+        <section id="challenge-panel" class="panel" style="display: none;"></section>
+        <section class="results-container panel">
+            <h3>📜 Results Scroll</h3>
+            <div id="output"></div>
+        </section>
+        <section id="final-message" class="panel" style="display: none;">
+            <h2>🎉 Quest Complete! 🎉</h2>
+            <p>You have mastered the fundamentals and reached the rank of Data Sage. Feel free to review your spells in the Spellbook!</p>
+        </section>
+    </main>
+
+    <!-- Spellbook Modal HTML -->
+    <div id="spellbook-modal" class="modal-overlay">
+        <div class="modal-content">
+            <button id="modal-close-btn" class="modal-close">×</button>
+            <h2>📖 Your Spellbook</h2>
+            <div id="spellbook-content">
+                <p>Complete challenges to add new spells here!</p>
+            </div>
+        </div>
+    </div>
+
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // --- DOM ELEMENTS ---
+            const spellbookBtn = document.getElementById('spellbook-btn');
+            const spellbookModal = document.getElementById('spellbook-modal');
+            const modalCloseBtn = document.getElementById('modal-close-btn');
+            const spellbookContent = document.getElementById('spellbook-content');
+
+            const knowledgePanel = document.getElementById('knowledge-panel');
+            const challengePanel = document.getElementById('challenge-panel');
+            const finalMessage = document.getElementById('final-message');
+            const outputElement = document.getElementById('output');
+            
+            const levelDisplay = document.getElementById('level-display');
+            const xpBarFill = document.getElementById('xp-bar-fill');
+            
+            // --- GAME STATE ---
+            let db;
+            let player = {
+                level: 1,
+                xp: 0,
+                xpToNextLevel: 100,
+                currentLessonIndex: 0,
+                unlockedSpells: []
+            };
+            
+            // --- LESSON DATA ---
+            const lessons = [
+                {
+                    title: "Lesson 1: The SELECT Spell",
+                    knowledgeHTML: `<p>Welcome, apprentice! The most fundamental spell in SQL is <code>SELECT</code>. It's how we ask the database to *show* us data.</p><p>To see all columns from a table, you use the asterisk wildcard (<code>*</code>), which means "everything". The basic structure is:</p><pre><code>SELECT * FROM table_name;</code></pre><p>Every SQL command must end with a semicolon (<code>;</code>). It tells the database you're done.</p>`,
+                    spell: { name: "SELECT *", description: "Retrieves all columns and rows from a table.", syntax: "SELECT * FROM table_name;" },
+                    challengeTitle: "The Royal Roster",
+                    challengeDescription: "King Arthur needs a complete list of his knights. The table is named `knights`. Your task is to select ALL information from it.",
+                    databaseSetup: `CREATE TABLE knights (id INTEGER, name TEXT, title TEXT); INSERT INTO knights VALUES (1, 'Lancelot', 'First Knight'), (2, 'Gawain', 'The Courteous'), (3, 'Galahad', 'The Pure');`,
+                    solution: "SELECT * FROM knights;",
+                    hint: "To select everything, use the wildcard character `*`. The table is called `knights`."
+                },
+                {
+                    title: "Lesson 2: Filtering with WHERE",
+                    knowledgeHTML: `<p>Excellent! Now, what if you don't want to see *everything*? The <code>WHERE</code> clause lets you filter data based on a condition.</p><p>You can also select specific columns by name instead of using <code>*</code>. To find warriors with a skill level over 90, you would write:</p><pre><code>SELECT name, skill_level FROM warriors WHERE skill_level > 90;</code></pre><p>Notice we list the columns we want (<code>name, skill_level</code>) and then add the <code>WHERE</code> condition.</p>`,
+                    spell: { name: "WHERE", description: "Filters records based on a specific condition.", syntax: "SELECT columns FROM table_name WHERE condition;" },
+                    challengeTitle: "The Elite Guard",
+                    challengeDescription: "The King only wants his most skilled warriors for a special quest. The table `warriors` has their `name` and `skill_level`. Show the `name` and `skill_level` of warriors with a skill_level greater than 90.",
+                    databaseSetup: `CREATE TABLE warriors (id INTEGER, name TEXT, skill_level INTEGER, weapon TEXT); INSERT INTO warriors VALUES (1, 'Aragorn', 95, 'Sword'), (2, 'Legolas', 98, 'Bow'), (3, 'Gimli', 88, 'Axe');`,
+                    solution: "SELECT name, skill_level FROM warriors WHERE skill_level > 90;",
+                    hint: "Remember to select only the `name` and `skill_level` columns and use a `WHERE` clause to filter."
+                }
+                // Add more lessons here...
+            ];
+
+            // --- CORE FUNCTIONS ---
+            async function initialize() {
+                try {
+                    const SQL = await initSqlJs({ locateFile: filename => `https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.8.0/${filename}` });
+                    window.SQL = SQL;
+                    loadLesson(player.currentLessonIndex);
+                    updateUI();
+                } catch (err) {
+                    console.error(err);
+                    knowledgePanel.innerHTML = `<h2 style="color:var(--error-color);">Fatal Error</h2><p>Could not load the SQL engine. Please check your internet connection and refresh.</p>`;
+                }
+            }
+
+            function loadLesson(index) {
+                if (index >= lessons.length) {
+                    knowledgePanel.style.display = 'none';
+                    challengePanel.style.display = 'none';
+                    finalMessage.style.display = 'block';
+                    return;
+                }
+                const lesson = lessons[index];
+                
+                // Show Lesson Panel, Hide Challenge Panel
+                knowledgePanel.style.display = 'block';
+                challengePanel.style.display = 'none';
+                
+                // Populate Lesson
+                knowledgePanel.innerHTML = `
+                    <h2>${lesson.title}</h2>
+                    <div class="knowledge-body">${lesson.knowledgeHTML}</div>
+                    <button id="start-practice-btn">Ready to Practice!</button>
+                `;
+                document.getElementById('start-practice-btn').addEventListener('click', startPractice);
+
+                // Populate Challenge in the background
+                challengePanel.innerHTML = `
+                    <div class="quest-log">
+                        <h2 id="challenge-title">${lesson.challengeTitle}</h2>
+                        <p id="challenge-description">${lesson.challengeDescription}</p>
+                    </div>
+                    <div class="terminal">
+                        <textarea id="query-editor" placeholder="Type your SQL spell here..."></textarea>
+                        <div class="button-group">
+                            <button id="hint-button">Show Hint (-10 XP)</button>
+                            <button id="run-button">⚡ Run Query</button>
+                        </div>
+                        <button id="next-lesson-btn" style="display: none;">Continue to Next Lesson ➡️</button>
+                    </div>
+                `;
+                document.getElementById('run-button').addEventListener('click', handleRunQuery);
+                document.getElementById('hint-button').addEventListener('click', handleShowHint);
+                document.getElementById('next-lesson-btn').addEventListener('click', () => {
+                    player.currentLessonIndex++;
+                    loadLesson(player.currentLessonIndex);
+                });
+                
+                // Reset Results Scroll
+                outputElement.innerHTML = '';
+                
+                // Prepare the database for the challenge
+                db = new window.SQL.Database();
+                db.run(lesson.databaseSetup);
+            }
+            
+            function startPractice() {
+                knowledgePanel.style.display = 'none';
+                challengePanel.style.display = 'block';
+                document.getElementById('query-editor').focus();
+            }
+
+            function handleRunQuery() {
+                const queryEditor = document.getElementById('query-editor');
+                const userQuery = queryEditor.value.trim();
+                if (!userQuery) return;
+
+                const lesson = lessons[player.currentLessonIndex];
+                let userResults, solutionResults, feedbackHTML = '';
+
+                try {
+                    userResults = db.exec(userQuery);
+                    solutionResults = db.exec(lesson.solution);
+
+                    const stringifyResults = (res) => {
+                        if (!res || res.length === 0) return "[]";
+                        const sortedValues = res[0].values.sort((a, b) => String(a[0]).localeCompare(String(b[0])));
+                        return JSON.stringify({ columns: res[0].columns.sort(), values: sortedValues });
+                    };
+
+                    if (stringifyResults(userResults) === stringifyResults(solutionResults)) {
+                        feedbackHTML = `<div class="feedback-message success-message">Success! Your query is correct.</div>`;
+                        addXp(100);
+                        unlockSpell(player.currentLessonIndex);
+                        document.getElementById('run-button').disabled = true;
+                        document.getElementById('hint-button').disabled = true;
+                        document.getElementById('next-lesson-btn').style.display = 'block';
+                    } else {
+                        feedbackHTML = `<div class="feedback-message error-message">Not quite... The results don't match. Try again.</div>`;
+                    }
+                } catch (err) {
+                    feedbackHTML = `<div class="feedback-message error-message">Syntax Error: ${err.message}</div>`;
+                }
+                
+                outputElement.innerHTML = feedbackHTML + (userResults && userResults.length > 0 ? renderTable(userResults[0]) : '');
+            }
+            
+            function handleShowHint() {
+                addXp(-10);
+                outputElement.innerHTML = `<div class="feedback-message hint-message">Hint: ${lessons[player.currentLessonIndex].hint}</div>`;
+            }
+
+            function unlockSpell(lessonIndex) {
+                if (!player.unlockedSpells.includes(lessonIndex)) {
+                    player.unlockedSpells.push(lessonIndex);
+                    spellbookBtn.disabled = false;
+                }
+            }
+
+            function renderSpellbook() {
+                if(player.unlockedSpells.length === 0) {
+                    spellbookContent.innerHTML = `<p>Your Spellbook is empty. Complete challenges to learn new spells!</p>`;
+                    return;
+                }
+                spellbookContent.innerHTML = '';
+                player.unlockedSpells.forEach(index => {
+                    const { spell } = lessons[index];
+                    const entry = document.createElement('div');
+                    entry.className = 'spellbook-entry';
+                    entry.innerHTML = `
+                        <h3>${spell.name}</h3>
+                        <p>${spell.description}</p>
+                        <pre><code>${spell.syntax}</code></pre>
+                    `;
+                    spellbookContent.appendChild(entry);
+                });
+            }
+
+            function addXp(amount) {
+                player.xp += amount;
+                if (player.xp < 0) player.xp = 0;
+                
+                if (player.xp >= player.xpToNextLevel) {
+                    player.level++;
+                    player.xp -= player.xpToNextLevel;
+                    player.xpToNextLevel = Math.floor(player.xpToNextLevel * 1.5);
+                }
+                updateUI();
+            }
+
+            // --- UI & RENDERING ---
+            function updateUI() {
+                levelDisplay.textContent = `Level ${player.level}`;
+                xpBarFill.style.width = `${(player.xp / player.xpToNextLevel) * 100}%`;
+            }
+            
+            function renderTable({ columns, values }) {
+                let tableHTML = '<table class="results-table"><thead><tr>';
+                columns.forEach(col => tableHTML += `<th>${col}</th>`);
+                tableHTML += '</tr></thead><tbody>';
+                values.forEach(row => {
+                    tableHTML += '<tr>';
+                    row.forEach(cell => tableHTML += `<td>${cell}</td>`);
+                    tableHTML += '</tr>';
+                });
+                tableHTML += '</tbody></table>';
+                return tableHTML;
+            }
+
+            // --- EVENT LISTENERS ---
+            spellbookBtn.addEventListener('click', () => {
+                renderSpellbook();
+                spellbookModal.style.display = 'flex';
+            });
+            modalCloseBtn.addEventListener('click', () => spellbookModal.style.display = 'none');
+            spellbookModal.addEventListener('click', (e) => { if(e.target === spellbookModal) spellbookModal.style.display = 'none'; });
+            
+            // --- START THE APP ---
+            initialize();
+        });
+    </script>
+</body>
+</html>
