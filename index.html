@@ -219,8 +219,91 @@
                     databaseSetup: `CREATE TABLE warriors (id INTEGER, name TEXT, skill_level INTEGER, weapon TEXT); INSERT INTO warriors VALUES (1, 'Aragorn', 95, 'Sword'), (2, 'Legolas', 98, 'Bow'), (3, 'Gimli', 88, 'Axe');`,
                     solution: "SELECT name, skill_level FROM warriors WHERE skill_level > 90;",
                     hint: "Remember to select only the `name` and `skill_level` columns and use a `WHERE` clause to filter."
+                },
+                {
+                    title: "Lesson 3: Ordering with ORDER BY",
+                    knowledgeHTML: `<p>Your results are unordered. To sort them, use the <code>ORDER BY</code> clause. By default, it sorts in ascending order (<code>ASC</code>). To sort in descending order, use <code>DESC</code>.</p><pre><code>SELECT name, valor_score FROM knights ORDER BY valor_score DESC;</code></pre><p>This query lists knights from the most valorous to the least.</p>`,
+                    spell: { name: "ORDER BY", description: "Sorts the result set in ascending or descending order.", syntax: "SELECT columns FROM table_name ORDER BY column ASC|DESC;" },
+                    challengeTitle: "The Tournament Rankings",
+                    challengeDescription: "The jousting tournament has concluded! Display the `participant` and their `score` from the `tournament_results` table. The list must be ordered by score from highest to lowest.",
+                    databaseSetup: `CREATE TABLE tournament_results (id INTEGER, participant TEXT, score INTEGER); INSERT INTO tournament_results VALUES (1, 'Black Knight', 85), (2, 'Green Knight', 92), (3, 'Knight of the Sun', 99);`,
+                    solution: "SELECT participant, score FROM tournament_results ORDER BY score DESC;",
+                    hint: "Use `ORDER BY` on the `score` column. To sort from highest to lowest, you need the `DESC` keyword."
+                },
+                {
+                    title: "Lesson 4: Limiting Results with LIMIT",
+                    knowledgeHTML: `<p>Sometimes a table has thousands of rows, but you only need the top few. The <code>LIMIT</code> clause restricts the number of rows returned.</p><p>It's often combined with <code>ORDER BY</code> to get the "top 5" or "bottom 10" of something.</p><pre><code>-- Get the 3 fastest mounts
+SELECT name, speed FROM mounts ORDER BY speed DESC LIMIT 3;</code></pre>`,
+                    spell: { name: "LIMIT", description: "Constrains the number of rows returned by a query.", syntax: "SELECT columns FROM table_name LIMIT number;" },
+                    challengeTitle: "The Three Most Fatigued",
+                    challengeDescription: "The alchemist has only 3 rejuvenation potions. From the `adventurers` table, find the `name` and `fatigue_level` of the 3 most fatigued adventurers to give them potions. The most fatigued have the highest `fatigue_level`.",
+                    databaseSetup: `CREATE TABLE adventurers (id INTEGER, name TEXT, fatigue_level INTEGER); INSERT INTO adventurers VALUES (1, 'Fjord', 76), (2, 'Caleb', 95), (3, 'Jester', 60), (4, 'Yasha', 98), (5, 'Beau', 88);`,
+                    solution: "SELECT name, fatigue_level FROM adventurers ORDER BY fatigue_level DESC LIMIT 3;",
+                    hint: "First, you need to `ORDER BY fatigue_level` in descending order. Then, use `LIMIT` to get only the top 3."
+                },
+                {
+                    title: "Lesson 5: Complex Filters with AND & OR",
+                    knowledgeHTML: `<p>What if you need to check multiple conditions? Use <code>AND</code> and <code>OR</code> in your <code>WHERE</code> clause.</p><p><code>AND</code> requires all conditions to be true. <code>OR</code> requires at least one condition to be true.</p><pre><code>-- Find powerful magic swords
+SELECT * FROM items WHERE type = 'Sword' AND magic_power > 50;
+
+-- Find items that are either legendary OR cost more than 1000 gold
+SELECT * FROM items WHERE rarity = 'Legendary' OR cost > 1000;</code></pre>`,
+                    spell: { name: "AND / OR", description: "Combine multiple conditions in a WHERE clause.", syntax: "WHERE condition1 AND|OR condition2;" },
+                    challengeTitle: "The Blacksmith's Order",
+                    challengeDescription: "The blacksmith needs a list of all items from the `magic_items` table that are either a 'Shield' OR have a `magic_power` greater than 80. Show all columns.",
+                    databaseSetup: `CREATE TABLE magic_items (id INTEGER, item_name TEXT, item_type TEXT, magic_power INTEGER); INSERT INTO magic_items VALUES (1, 'Fire Sword', 'Sword', 75), (2, 'Aegis', 'Shield', 90), (3, 'Iron Helmet', 'Helm', 20), (4, 'Boots of Speed', 'Boots', 85);`,
+                    solution: "SELECT * FROM magic_items WHERE item_type = 'Shield' OR magic_power > 80;",
+                    hint: "You need a `WHERE` clause with two conditions linked by `OR`."
+                },
+                {
+                    title: "Lesson 6: Pattern Matching with LIKE",
+                    knowledgeHTML: `<p>The <code>LIKE</code> operator is used in a <code>WHERE</code> clause to search for a specified pattern in a column.</p><p>The two most common wildcards are:</p><ul><li><code>%</code> - The percent sign represents zero, one, or multiple characters.</li><li><code>_</code> - The underscore represents a single character.</li></ul><pre><code>-- Find all scrolls that start with 'Fire'
+SELECT title FROM scrolls WHERE title LIKE 'Fire%';
+
+-- Find all potions where the second letter is 'o'
+SELECT name FROM potions WHERE name LIKE '_o%';</code></pre>`,
+                    spell: { name: "LIKE", description: "Performs pattern matching on string data.", syntax: "WHERE column LIKE 'pattern%';" },
+                    challengeTitle: "The Prophetic Scroll",
+                    challengeDescription: "A prophecy mentions a 'Dragon'. Search the `scrolls` table for any scroll whose `title` contains the word 'Dragon'.",
+                    databaseSetup: `CREATE TABLE scrolls (id INTEGER, title TEXT, author TEXT); INSERT INTO scrolls VALUES (1, 'Summoning Basics', 'Melf'), (2, 'The Dragon''s Hoard', 'Unknown'), (3, 'Chronicles of the Dragonbane', 'Fizban');`,
+                    solution: "SELECT * FROM scrolls WHERE title LIKE '%Dragon%';",
+                    hint: "To find text anywhere in a string, you need to put the percent wildcard `%` on both sides of the word you're searching for."
+                },
+                {
+                    title: "Lesson 7: Counting with COUNT",
+                    knowledgeHTML: `<p>Aggregate functions perform a calculation on a set of values and return a single value. The simplest is <code>COUNT()</code>.</p><p><code>COUNT(*)</code> counts the total number of rows. You can give the result column a new name using <code>AS</code>.</p><pre><code>SELECT COUNT(*) AS total_orcs FROM orc_horde;</code></pre>`,
+                    spell: { name: "COUNT()", description: "Counts the number of rows matching a criteria.", syntax: "SELECT COUNT(*) FROM table_name;" },
+                    challengeTitle: "Goblin Headcount",
+                    challengeDescription: "The quartermaster needs an exact headcount of the goblin horde. Count all the rows in the `goblin_horde` table and name the result column `goblin_count`.",
+                    databaseSetup: `CREATE TABLE goblin_horde (id INTEGER, name TEXT, weapon TEXT); INSERT INTO goblin_horde VALUES (1, 'Grik', 'Club'), (2, 'Snarl', 'Dagger'), (3, 'Zog', 'Rock'), (4, 'Nott', 'Bow');`,
+                    solution: "SELECT COUNT(*) AS goblin_count FROM goblin_horde;",
+                    hint: "Use `COUNT(*)` to count every row. Use `AS` to rename the column."
+                },
+                {
+                    title: "Lesson 8: Grouping with GROUP BY",
+                    knowledgeHTML: `<p>The <code>GROUP BY</code> statement groups rows that have the same values in specified columns into summary rows. It's often used with aggregate functions like <code>COUNT()</code> to group the result set by one or more columns.</p><pre><code>-- Count how many members are in each faction
+SELECT faction, COUNT(*) AS member_count
+FROM guild_members
+GROUP BY faction;</code></pre>`,
+                    spell: { name: "GROUP BY", description: "Groups rows that share a property so an aggregate function can be applied to each group.", syntax: "GROUP BY column_name;" },
+                    challengeTitle: "Creature Census",
+                    challengeDescription: "The Royal Menagerie needs a census. From the `creatures` table, count how many creatures there are of each `creature_type`. The result should have two columns: `creature_type` and `count`.",
+                    databaseSetup: `CREATE TABLE creatures (id INTEGER, name TEXT, creature_type TEXT); INSERT INTO creatures VALUES (1, 'Hedwig', 'Owl'), (2, 'Fawkes', 'Phoenix'), (3, 'Nagini', 'Snake'), (4, 'Errol', 'Owl');`,
+                    solution: "SELECT creature_type, COUNT(*) AS count FROM creatures GROUP BY creature_type;",
+                    hint: "You need to `SELECT` the column you are grouping by and the `COUNT(*)`. Then, use `GROUP BY` on that same column."
+                },
+                {
+                    title: "Lesson 9: Joining Tables with INNER JOIN",
+                    knowledgeHTML: `<p>Real-world data is often split across multiple tables. <code>JOIN</code> is used to combine rows from two or more tables based on a related column between them.</p><p><code>INNER JOIN</code> selects records that have matching values in both tables.</p><pre><code>SELECT students.name, courses.title
+FROM students
+INNER JOIN courses ON students.course_id = courses.id;</code></pre><p>Here, we link the tables where the <code>course_id</code> in the <code>students</code> table matches the <code>id</code> in the <code>courses</code> table.</p>`,
+                    spell: { name: "INNER JOIN", description: "Combines rows from two tables when a join condition is met.", syntax: "FROM table1 INNER JOIN table2 ON table1.column = table2.column;" },
+                    challengeTitle: "Dragon Slayers",
+                    challengeDescription: "The King wants a list of knights and the dragons they've defeated. Combine the `knights` table with the `dragons_slain` table. The result should show the knight's `name` and the `dragon_name`. Link them using the knight's `id` and the `knight_id`.",
+                    databaseSetup: `CREATE TABLE knights (id INTEGER, name TEXT); INSERT INTO knights VALUES (1, 'St. George'), (2, 'Sir Cadogan'); CREATE TABLE dragons_slain (dragon_name TEXT, knight_id INTEGER); INSERT INTO dragons_slain VALUES ('Emberfang', 1), ('Frostscale', 2), ('Gloomwing', 1);`,
+                    solution: "SELECT knights.name, dragons_slain.dragon_name FROM knights INNER JOIN dragons_slain ON knights.id = dragons_slain.knight_id;",
+                    hint: "Use `INNER JOIN` on the two tables. The `ON` condition is `knights.id = dragons_slain.knight_id`. You need to select `knights.name` and `dragons_slain.dragon_name`."
                 }
-                // Add more lessons here...
             ];
 
             // --- CORE FUNCTIONS ---
@@ -307,6 +390,7 @@
 
                     const stringifyResults = (res) => {
                         if (!res || res.length === 0) return "[]";
+                        // Sort by the first column to ensure order doesn't matter for comparison
                         const sortedValues = res[0].values.sort((a, b) => String(a[0]).localeCompare(String(b[0])));
                         return JSON.stringify({ columns: res[0].columns.sort(), values: sortedValues });
                     };
